@@ -1,0 +1,5 @@
+;;;; Hey, Emacs! This is a -*- lisp -*- file!
+(in-package #:cataclysm)
+(decf *current-floor*)
+(setf *from* 'below)
+(load-map "ministry.map")

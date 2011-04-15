@@ -1,0 +1,70 @@
+CATACLYSM
+by Jeremiah Stoddard
+An adventure game written in Common Lisp
+
+Cataclysm is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Upon startup Cataclysm reads "overworld.map" as the primary game map. A ".map"
+file is a lisp file which contains data for a particular map, setting a handful
+of global variables as follows:
+
+*tileset* - This contains a string with the name of a png file containing the
+            tiles used in this map. This png file will be loaded right after
+            the .map file is read. This file should be 640x480, and tiles will
+            be 32x32. Objects may have a transparent background. Tiles will be
+            referenced by number, 0 being the tile found at 0,0; 1 being the
+            tile found at 32,0; 20 being the tile found at 0,32; and so forth.
+
+*map-width* - This contains the width of the map in number of tiles. A width of
+              20, for example, would be 640 pixels wide (each tile being 32x32
+              pixels).
+
+*map-height* - This contains the height of the map as a number of tiles.
+
+*player-x* - This contains the starting x position of the player in this map.
+             This should be a pixel value: if the map is 20 tiles by 15 tiles,
+             something like 320, 240 would put the player near the center. (In
+             reality, this would put the upper-left corner of the player's
+             sprite in the center of the map).
+
+*player-y* - The starting y position of the player in this map, as a pixel
+             value.
+
+*floor-map* - This is an array of *map-width* by *map-height* containing
+              integer values representing tiles from the map's tileset. These
+              make up the ground and elements from the following variables will
+              be drawn on top of it.
+
+*wall-map* - This is an array of *map-width* by *map-height* containing
+             integer values representing tiles from the map's tileset. These
+             make up immobile barriers that the player cannot pass.
+
+*obstacle-map* - This is an array of *map-width* by *map-height* containing
+                 integer values representing tiles from the map's tileset.
+                 These make up barriers that the player can move until they
+                 reach the edge of the map, or another obstacle or barrier from
+                 either this map or the *wall-map*.
+
+*object-map* - This is an array of *map-width* by *map-height* containing
+               integer values representing tiles from the map's tileset. These
+               are objects that can be retrieved by the player.
+
+*portals* - This is an array of *map-width* by *map-height* containing mainly
+            empty strings. When a player walks onto a tile that corresponds to
+            a non-empty string, the game will try to load a file whose name
+            corresponds to that string, under the assumption that it is a .map
+            file. To create an entrance to another map, set the corresponding
+            string to that map's filename, and the corresponding *floor-map*
+            tile to an appropriate icon (such as a door).
+
