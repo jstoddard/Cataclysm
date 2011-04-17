@@ -52,10 +52,10 @@
 ;;; find out which dungeon we're in, if we just entered
 (unless *current-dungeon*
   (cond
-    ((and (> *player-x* 720) (> *player-y* 400))
+    ((and (> (x-position *player*) 720) (> (y-position *player*) 400))
      (setf *current-dungeon* 'miniluv))
-    ((> *player-x* 720) (setf *current-dungeon* 'minitrue))
-    ((> *player-y* 400) (setf *current-dungeon* 'minipax))
+    ((> (x-position *player*) 720) (setf *current-dungeon* 'minitrue))
+    ((> (y-position *player*) 400) (setf *current-dungeon* 'minipax))
     (t (setf *current-dungeon* 'miniplenty))))
 
 ;;; Has this dungeon been generated? If not, do it now
@@ -607,14 +607,14 @@
    (setf *portals* (aref *miniplenty-portals* *current-floor*))
    (setf *messages* (aref *miniplenty-messages* *current-floor*))
    (cond ((eq *from* 'above)
-	  (setf *player-x* (first (aref *miniplenty-start-down*
+	  (setf (x-position *player*) (first (aref *miniplenty-start-down*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *miniplenty-start-down*
+	  (setf (y-position *player*) (second (aref *miniplenty-start-down*
 					 *current-floor*))))
 	 (t
-	  (setf *player-x* (first (aref *miniplenty-start-up*
+	  (setf (x-position *player*) (first (aref *miniplenty-start-up*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *miniplenty-start-up*
+	  (setf (y-position *player*) (second (aref *miniplenty-start-up*
 					 *current-floor*))))))	  
   (minipax
    (when (null (aref *minipax-floor* *current-floor*))
@@ -626,14 +626,14 @@
    (setf *portals* (aref *minipax-portals* *current-floor*))
    (setf *messages* (aref *minipax-messages* *current-floor*))
    (cond ((eq *from* 'above)
-	  (setf *player-x* (first (aref *minipax-start-down*
+	  (setf (x-position *player*) (first (aref *minipax-start-down*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *minipax-start-down*
+	  (setf (y-position *player*) (second (aref *minipax-start-down*
 					 *current-floor*))))
 	 (t
-	  (setf *player-x* (first (aref *minipax-start-up*
+	  (setf (x-position *player*) (first (aref *minipax-start-up*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *minipax-start-up*
+	  (setf (y-position *player*) (second (aref *minipax-start-up*
 					 *current-floor*))))))	  
 
   (minitrue
@@ -646,14 +646,14 @@
    (setf *portals* (aref *minitrue-portals* *current-floor*))
    (setf *messages* (aref *minitrue-messages* *current-floor*))
    (cond ((eq *from* 'above)
-	  (setf *player-x* (first (aref *minitrue-start-down*
+	  (setf (x-position *player*) (first (aref *minitrue-start-down*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *minitrue-start-down*
+	  (setf (y-position *player*) (second (aref *minitrue-start-down*
 					 *current-floor*))))
 	 (t
-	  (setf *player-x* (first (aref *minitrue-start-up*
+	  (setf (x-position *player*) (first (aref *minitrue-start-up*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *minitrue-start-up*
+	  (setf (y-position *player*) (second (aref *minitrue-start-up*
 					 *current-floor*))))))	  
 
   (miniluv
@@ -666,14 +666,14 @@
    (setf *portals* (aref *miniluv-portals* *current-floor*))
    (setf *messages* (aref *miniluv-messages* *current-floor*))
    (cond ((eq *from* 'above)
-	  (setf *player-x* (first (aref *miniluv-start-down*
+	  (setf (x-position *player*) (first (aref *miniluv-start-down*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *miniluv-start-down*
+	  (setf (y-position *player*) (second (aref *miniluv-start-down*
 					 *current-floor*))))
 	 (t
-	  (setf *player-x* (first (aref *miniluv-start-up*
+	  (setf (x-position *player*) (first (aref *miniluv-start-up*
 					*current-floor*)))
-	  (setf *player-y* (second (aref *miniluv-start-up*
+	  (setf (y-position *player*) (second (aref *miniluv-start-up*
 					 *current-floor*)))))))
 
 
@@ -684,8 +684,24 @@
     (when (and
 	   (not (= (aref *floor-map* i j) 13))
 	   (< (aref *wall-map* i j) 0)
-	   (> (abs (- (* 32 i) *player-x*)) 64)
-	   (> (abs (- (* 32 j) *player-y*)) 64)
+	   (> (abs (- (* 32 i) (x-position *player*))) 64)
+	   (> (abs (- (* 32 j) (y-position *player*))) 64)
 	   (< (random 175) (1+ *current-floor*)))
-      (push (list (+ (* 32 i) 16) (+ (* 32 j) 16) 'down t (* 20 (1+ *current-floor*)) (1+ *current-floor*) 0)
+      (push (make-instance 'enemy :x-position (+ (* 32 i) 16)
+			   :y-position (+ (* 32 j) 16)
+			   :direction 'down :moving t
+			   :hit-points (1+ *current-floor*)
+			   :sprite (* 20 (1+ *current-floor*)))
 	    *enemies*))))
+
+(setf *current-map* (make-instance 'world-map
+				   :map-name 'overworld
+				   :tileset *tileset*
+				   :map-width *map-width*
+				   :map-height *map-height*
+				   :floor-map *floor-map*
+				   :wall-map *wall-map*
+				   :obstacle-map *obstacle-map*
+				   :object-map *object-map*
+				   :portals *portals*
+				   :messages *messages*))

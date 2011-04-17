@@ -36,33 +36,33 @@
       (3 (setf *portal-location* 'miniluv)))))
 
 ;;; Create overworld
-(setf *tileset* "images/tiles.png")
-(setf *map-width* 45)
-(setf *map-height* 30)
-(setf *floor-map* (make-array '(45 30) :initial-element 3))
-(setf *wall-map* (make-array '(45 30) :initial-element -1)) ; no walls
-(setf *obstacle-map* (make-array '(45 30) :initial-element -1)) ; no obstacles
-(setf *object-map* (make-array '(45 30) :initial-element -1)) ; no objects
-(setf *portals* (make-array '(45 30) :initial-element nil)) ; no portals
-(setf *messages* (make-array '(45 50) :initial-element nil)) ; no messages
+(defparameter *tileset* "images/tiles.png")
+(defparameter *map-width* 45)
+(defparameter *map-height* 30)
+(defparameter *floor-map* (make-array '(45 30) :initial-element 3))
+(defparameter *wall-map* (make-array '(45 30) :initial-element -1))
+(defparameter *obstacle-map* (make-array '(45 30) :initial-element -1))
+(defparameter *object-map* (make-array '(45 30) :initial-element -1))
+(defparameter *portals* (make-array '(45 30) :initial-element nil))
+(defparameter *messages* (make-array '(45 50) :initial-element nil))
 
 ;;; player location
 (cond
   ((eq *current-dungeon* 'miniplenty)
-   (setf *player-x* 144)
-   (setf *player-y* 176))
+   (setf (x-position *player*) 144)
+   (setf (y-position *player*) 176))
   ((eq *current-dungeon* 'minipax)
-   (setf *player-x* 112)
-   (setf *player-y* 848))
+   (setf (x-position *player*) 112)
+   (setf (y-position *player*) 848))
   ((eq *current-dungeon* 'minitrue)
-   (setf *player-x* 1264)
-   (setf *player-y* 208))
+   (setf (x-position *player*) 1264)
+   (setf (y-position *player*) 208))
   ((eq *current-dungeon* 'miniluv)
-   (setf *player-x* 1264)
-   (setf *player-y* 848))
+   (setf (x-position *player*) 1264)
+   (setf (y-position *player*) 848))
   (t
-   (setf *player-x* 720)
-   (setf *player-y* 400)))
+   (setf (x-position *player*) 720)
+   (setf (y-position *player*) 400)))
 (setf *current-dungeon* nil)
 
 ;;; border of trees around overworld
@@ -296,3 +296,15 @@
 (setf (aref *messages* 38 26) "Ministry of Love")
 
 ;;; place a bunch of enemies around the map
+
+(setf *current-map* (make-instance 'world-map
+				   :map-name 'overworld
+				   :tileset *tileset*
+				   :map-width *map-width*
+				   :map-height *map-height*
+				   :floor-map *floor-map*
+				   :wall-map *wall-map*
+				   :obstacle-map *obstacle-map*
+				   :object-map *object-map*
+				   :portals *portals*
+				   :messages *messages*))
