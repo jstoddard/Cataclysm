@@ -49,15 +49,6 @@
 (defvar *miniluv-start-up* (make-array 8 :initial-element nil))
 (defvar *miniluv-start-down* (make-array 8 :initial-element nil))
 
-;;; find out which dungeon we're in, if we just entered
-(unless *current-dungeon*
-  (cond
-    ((and (> (x-position *player*) 720) (> (y-position *player*) 400))
-     (setf *current-dungeon* 'miniluv))
-    ((> (x-position *player*) 720) (setf *current-dungeon* 'minitrue))
-    ((> (y-position *player*) 400) (setf *current-dungeon* 'minipax))
-    (t (setf *current-dungeon* 'miniplenty))))
-
 ;;; Has this dungeon been generated? If not, do it now
 (defparameter *dungeon-map* (make-array '(9 9) :initial-element 0))
 
@@ -274,21 +265,21 @@
 		  (+ (* end-y 15) 7)) 1
 	    (aref (aref *miniplenty-portals* *current-floor*)
 		  (+ (* end-x 15) 7)
-		  (+ (* end-y 15) 7)) "floor-down.map"))
+		  (+ (* end-y 15) 7)) 'floor-down))
     (when (> *current-floor* 0)
       (setf (aref (aref *miniplenty-floor* *current-floor*)
 		  (+ (* start-x 15) 7)
 		  (+ (* start-y 15) 7)) 2
 	    (aref (aref *miniplenty-portals* *current-floor*)
 		  (+ (* start-x 15) 7)
-		  (+ (* start-y 15) 7)) "floor-up.map"))
+		  (+ (* start-y 15) 7)) 'floor-up))
     (when (= *current-floor* 0)
       (dotimes (i 7)
 	(setf (aref (aref *miniplenty-floor* *current-floor*) 37 (+ i 67)) 0)
 	(setf (aref (aref *miniplenty-wall* *current-floor*) 37 (+ i 68)) -1)
 	(setf (aref (aref *miniplenty-wall* *current-floor*) 36 (+ i 68)) 20)
 	(setf (aref (aref *miniplenty-wall* *current-floor*) 38 (+ i 68)) 20))
-      (setf (aref (aref *miniplenty-portals* *current-floor*) 37 74) "overworld.map"))))
+      (setf (aref (aref *miniplenty-portals* *current-floor*) 37 74) 'overworld))))
 
 (defun create-dungeon-minipax ()
   (let ((start-x (random 5)) (start-y (random 5)) (end-x 0) (end-y 0))
@@ -375,21 +366,21 @@
 		  (+ (* end-y 15) 7)) 1
 	    (aref (aref *minipax-portals* *current-floor*)
 		  (+ (* end-x 15) 7)
-		  (+ (* end-y 15) 7)) "floor-down.map"))
+		  (+ (* end-y 15) 7)) 'floor-down))
     (when (> *current-floor* 0)
       (setf (aref (aref *minipax-floor* *current-floor*)
 		  (+ (* start-x 15) 7)
 		  (+ (* start-y 15) 7)) 2
 	    (aref (aref *minipax-portals* *current-floor*)
 		  (+ (* start-x 15) 7)
-		  (+ (* start-y 15) 7)) "floor-up.map"))
+		  (+ (* start-y 15) 7)) 'floor-up))
     (when (= *current-floor* 0)
       (dotimes (i 7)
 	(setf (aref (aref *minipax-floor* *current-floor*) 37 (+ i 67)) 0)
 	(setf (aref (aref *minipax-wall* *current-floor*) 37 (+ i 68)) -1)
 	(setf (aref (aref *minipax-wall* *current-floor*) 36 (+ i 68)) 20)
 	(setf (aref (aref *minipax-wall* *current-floor*) 38 (+ i 68)) 20))
-      (setf (aref (aref *minipax-portals* *current-floor*) 37 74) "overworld.map"))))
+      (setf (aref (aref *minipax-portals* *current-floor*) 37 74) 'overworld))))
 
 (defun create-dungeon-minitrue ()
   (let ((start-x (random 5)) (start-y (random 5)) (end-x 0) (end-y 0))
@@ -476,21 +467,21 @@
 		  (+ (* end-y 15) 7)) 1
 	    (aref (aref *minitrue-portals* *current-floor*)
 		  (+ (* end-x 15) 7)
-		  (+ (* end-y 15) 7)) "floor-down.map"))
+		  (+ (* end-y 15) 7)) 'floor-down))
     (when (> *current-floor* 0)
       (setf (aref (aref *minitrue-floor* *current-floor*)
 		  (+ (* start-x 15) 7)
 		  (+ (* start-y 15) 7)) 2
 	    (aref (aref *minitrue-portals* *current-floor*)
 		  (+ (* start-x 15) 7)
-		  (+ (* start-y 15) 7)) "floor-up.map"))
+		  (+ (* start-y 15) 7)) 'floor-up))
     (when (= *current-floor* 0)
       (dotimes (i 7)
 	(setf (aref (aref *minitrue-floor* *current-floor*) 37 (+ i 67)) 0)
 	(setf (aref (aref *minitrue-wall* *current-floor*) 37 (+ i 68)) -1)
 	(setf (aref (aref *minitrue-wall* *current-floor*) 36 (+ i 68)) 20)
 	(setf (aref (aref *minitrue-wall* *current-floor*) 38 (+ i 68)) 20))
-      (setf (aref (aref *minitrue-portals* *current-floor*) 37 74) "overworld.map"))))
+      (setf (aref (aref *minitrue-portals* *current-floor*) 37 74) 'overworld))))
 
 (defun create-dungeon-miniluv ()
   (let ((start-x (random 5)) (start-y (random 5)) (end-x 0) (end-y 0))
@@ -577,131 +568,179 @@
 		  (+ (* end-y 15) 7)) 1
 	    (aref (aref *miniluv-portals* *current-floor*)
 		  (+ (* end-x 15) 7)
-		  (+ (* end-y 15) 7)) "floor-down.map"))
+		  (+ (* end-y 15) 7)) 'floor-down))
     (when (> *current-floor* 0)
       (setf (aref (aref *miniluv-floor* *current-floor*)
 		  (+ (* start-x 15) 7)
 		  (+ (* start-y 15) 7)) 2
 	    (aref (aref *miniluv-portals* *current-floor*)
 		  (+ (* start-x 15) 7)
-		  (+ (* start-y 15) 7)) "floor-up.map"))
+		  (+ (* start-y 15) 7)) 'floor-up))
     (when (= *current-floor* 0)
       (dotimes (i 7)
 	(setf (aref (aref *miniluv-floor* *current-floor*) 37 (+ i 67)) 0)
 	(setf (aref (aref *miniluv-wall* *current-floor*) 37 (+ i 68)) -1)
 	(setf (aref (aref *miniluv-wall* *current-floor*) 36 (+ i 68)) 20)
 	(setf (aref (aref *miniluv-wall* *current-floor*) 38 (+ i 68)) 20))
-      (setf (aref (aref *miniluv-portals* *current-floor*) 37 74) "overworld.map"))))
+      (setf (aref (aref *miniluv-portals* *current-floor*) 37 74) 'overworld))))
 
-;;;; set current map to appropriate dungeon and floor
-(setf *map-width* 75)
-(setf *map-height* 75)
-(case *current-dungeon*
-  (miniplenty
-   (when (null (aref *miniplenty-floor* *current-floor*))
-     (create-dungeon-miniplenty))
-   (setf *floor-map* (aref *miniplenty-floor* *current-floor*))
-   (setf *wall-map* (aref *miniplenty-wall* *current-floor*))
-   (setf *obstacle-map* (aref *miniplenty-obstacle* *current-floor*))
-   (setf *object-map* (aref *miniplenty-object* *current-floor*))
-   (setf *portals* (aref *miniplenty-portals* *current-floor*))
-   (setf *messages* (aref *miniplenty-messages* *current-floor*))
-   (cond ((eq *from* 'above)
-	  (setf (x-position *player*) (first (aref *miniplenty-start-down*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *miniplenty-start-down*
-					 *current-floor*))))
-	 (t
-	  (setf (x-position *player*) (first (aref *miniplenty-start-up*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *miniplenty-start-up*
-					 *current-floor*))))))	  
-  (minipax
-   (when (null (aref *minipax-floor* *current-floor*))
-     (create-dungeon-minipax))
-   (setf *floor-map* (aref *minipax-floor* *current-floor*))
-   (setf *wall-map* (aref *minipax-wall* *current-floor*))
-   (setf *obstacle-map* (aref *minipax-obstacle* *current-floor*))
-   (setf *object-map* (aref *minipax-object* *current-floor*))
-   (setf *portals* (aref *minipax-portals* *current-floor*))
-   (setf *messages* (aref *minipax-messages* *current-floor*))
-   (cond ((eq *from* 'above)
-	  (setf (x-position *player*) (first (aref *minipax-start-down*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *minipax-start-down*
-					 *current-floor*))))
-	 (t
-	  (setf (x-position *player*) (first (aref *minipax-start-up*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *minipax-start-up*
-					 *current-floor*))))))	  
+(defun dungeon-select ()
+  ;;; find out which dungeon we're in, if we just entered
+  (unless *current-dungeon*
+    (cond
+      ((and (> (x-position *player*) 720) (> (y-position *player*) 400))
+       (setf *current-dungeon* 'miniluv))
+      ((> (x-position *player*) 720) (setf *current-dungeon* 'minitrue))
+      ((> (y-position *player*) 400) (setf *current-dungeon* 'minipax))
+      (t (setf *current-dungeon* 'miniplenty))))
 
-  (minitrue
-   (when (null (aref *minitrue-floor* *current-floor*))
-     (create-dungeon-minitrue))
-   (setf *floor-map* (aref *minitrue-floor* *current-floor*))
-   (setf *wall-map* (aref *minitrue-wall* *current-floor*))
-   (setf *obstacle-map* (aref *minitrue-obstacle* *current-floor*))
-   (setf *object-map* (aref *minitrue-object* *current-floor*))
-   (setf *portals* (aref *minitrue-portals* *current-floor*))
-   (setf *messages* (aref *minitrue-messages* *current-floor*))
-   (cond ((eq *from* 'above)
-	  (setf (x-position *player*) (first (aref *minitrue-start-down*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *minitrue-start-down*
-					 *current-floor*))))
-	 (t
-	  (setf (x-position *player*) (first (aref *minitrue-start-up*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *minitrue-start-up*
-					 *current-floor*))))))	  
+  ;;;; set current map to appropriate dungeon and floor
+  (setf *map-width* 75)
+  (setf *map-height* 75)
+  (case *current-dungeon*
+    (miniplenty
+     (when (null (aref *miniplenty-floor* *current-floor*))
+       (create-dungeon-miniplenty))
+     (setf *floor-map* (aref *miniplenty-floor* *current-floor*))
+     (setf *wall-map* (aref *miniplenty-wall* *current-floor*))
+     (setf *obstacle-map* (aref *miniplenty-obstacle* *current-floor*))
+     (setf *object-map* (aref *miniplenty-object* *current-floor*))
+     (setf *portals* (aref *miniplenty-portals* *current-floor*))
+     (setf *messages* (aref *miniplenty-messages* *current-floor*))
+     (cond ((eq *from* 'above)
+	    (setf (x-position *player*) (first (aref *miniplenty-start-down*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *miniplenty-start-down*
+						      *current-floor*))))
+	   (t
+	    (setf (x-position *player*) (first (aref *miniplenty-start-up*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *miniplenty-start-up*
+						      *current-floor*))))))	  
+    (minipax
+     (when (null (aref *minipax-floor* *current-floor*))
+       (create-dungeon-minipax))
+     (setf *floor-map* (aref *minipax-floor* *current-floor*))
+     (setf *wall-map* (aref *minipax-wall* *current-floor*))
+     (setf *obstacle-map* (aref *minipax-obstacle* *current-floor*))
+     (setf *object-map* (aref *minipax-object* *current-floor*))
+     (setf *portals* (aref *minipax-portals* *current-floor*))
+     (setf *messages* (aref *minipax-messages* *current-floor*))
+     (cond ((eq *from* 'above)
+	    (setf (x-position *player*) (first (aref *minipax-start-down*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *minipax-start-down*
+						      *current-floor*))))
+	   (t
+	    (setf (x-position *player*) (first (aref *minipax-start-up*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *minipax-start-up*
+						      *current-floor*))))))	  
+    
+    (minitrue
+     (when (null (aref *minitrue-floor* *current-floor*))
+       (create-dungeon-minitrue))
+     (setf *floor-map* (aref *minitrue-floor* *current-floor*))
+     (setf *wall-map* (aref *minitrue-wall* *current-floor*))
+     (setf *obstacle-map* (aref *minitrue-obstacle* *current-floor*))
+     (setf *object-map* (aref *minitrue-object* *current-floor*))
+     (setf *portals* (aref *minitrue-portals* *current-floor*))
+     (setf *messages* (aref *minitrue-messages* *current-floor*))
+     (cond ((eq *from* 'above)
+	    (setf (x-position *player*) (first (aref *minitrue-start-down*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *minitrue-start-down*
+						      *current-floor*))))
+	   (t
+	    (setf (x-position *player*) (first (aref *minitrue-start-up*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *minitrue-start-up*
+						      *current-floor*))))))	  
+    
+    (miniluv
+     (when (null (aref *miniluv-floor* *current-floor*))
+       (create-dungeon-miniluv))
+     (setf *floor-map* (aref *miniluv-floor* *current-floor*))
+     (setf *wall-map* (aref *miniluv-wall* *current-floor*))
+     (setf *obstacle-map* (aref *miniluv-obstacle* *current-floor*))
+     (setf *object-map* (aref *miniluv-object* *current-floor*))
+     (setf *portals* (aref *miniluv-portals* *current-floor*))
+     (setf *messages* (aref *miniluv-messages* *current-floor*))
+     (cond ((eq *from* 'above)
+	    (setf (x-position *player*) (first (aref *miniluv-start-down*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *miniluv-start-down*
+						      *current-floor*))))
+	   (t
+	    (setf (x-position *player*) (first (aref *miniluv-start-up*
+						     *current-floor*)))
+	    (setf (y-position *player*) (second (aref *miniluv-start-up*
+						      *current-floor*)))))))
+  
+  
+  ;;;; Place appropriate enemies
+  (setf *enemies* nil)
+  (dotimes (i 75)
+    (dotimes (j 75)
+      (when (and
+	     (not (= (aref *floor-map* i j) 13))
+	     (< (aref *wall-map* i j) 0)
+	     (> (abs (- (* 32 i) (x-position *player*))) 64)
+	     (> (abs (- (* 32 j) (y-position *player*))) 64)
+	     (< (random 175) (1+ *current-floor*)))
+	(push (make-instance 'enemy :x-position (+ (* 32 i) 16)
+			     :y-position (+ (* 32 j) 16)
+			     :direction 'down :moving t
+			     :hit-points (1+ *current-floor*)
+			     :sprite (* 20 (1+ *current-floor*)))
+	      *enemies*)))))
 
-  (miniluv
-   (when (null (aref *miniluv-floor* *current-floor*))
-     (create-dungeon-miniluv))
-   (setf *floor-map* (aref *miniluv-floor* *current-floor*))
-   (setf *wall-map* (aref *miniluv-wall* *current-floor*))
-   (setf *obstacle-map* (aref *miniluv-obstacle* *current-floor*))
-   (setf *object-map* (aref *miniluv-object* *current-floor*))
-   (setf *portals* (aref *miniluv-portals* *current-floor*))
-   (setf *messages* (aref *miniluv-messages* *current-floor*))
-   (cond ((eq *from* 'above)
-	  (setf (x-position *player*) (first (aref *miniluv-start-down*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *miniluv-start-down*
-					 *current-floor*))))
-	 (t
-	  (setf (x-position *player*) (first (aref *miniluv-start-up*
-					*current-floor*)))
-	  (setf (y-position *player*) (second (aref *miniluv-start-up*
-					 *current-floor*)))))))
+(defun floor-down-select ()
+  (incf *current-floor*)
+  (setf *from* 'above)
+  (dungeon-select))
 
+(defun floor-up-select ()
+  (decf *current-floor*)
+  (setf *from* 'below)
+  (dungeon-select))
 
-;;;; Place appropriate enemies
-(setf *enemies* nil)
-(dotimes (i 75)
-  (dotimes (j 75)
-    (when (and
-	   (not (= (aref *floor-map* i j) 13))
-	   (< (aref *wall-map* i j) 0)
-	   (> (abs (- (* 32 i) (x-position *player*))) 64)
-	   (> (abs (- (* 32 j) (y-position *player*))) 64)
-	   (< (random 175) (1+ *current-floor*)))
-      (push (make-instance 'enemy :x-position (+ (* 32 i) 16)
-			   :y-position (+ (* 32 j) 16)
-			   :direction 'down :moving t
-			   :hit-points (1+ *current-floor*)
-			   :sprite (* 20 (1+ *current-floor*)))
-	    *enemies*))))
+(add-map (make-instance 'world-map
+			:map-name 'ministry
+			:tileset *tileset*
+			:map-width *map-width*
+			:map-height *map-height*
+			:floor-map *floor-map*
+			:wall-map *wall-map*
+			:obstacle-map *obstacle-map*
+			:object-map *object-map*
+			:portals *portals*
+			:messages *messages*))
 
-(setf *current-map* (make-instance 'world-map
-				   :map-name 'overworld
-				   :tileset *tileset*
-				   :map-width *map-width*
-				   :map-height *map-height*
-				   :floor-map *floor-map*
-				   :wall-map *wall-map*
-				   :obstacle-map *obstacle-map*
-				   :object-map *object-map*
-				   :portals *portals*
-				   :messages *messages*))
+(add-map (make-instance 'world-map
+			:map-name 'floor-up
+			:tileset *tileset*
+			:map-width *map-width*
+			:map-height *map-height*
+			:floor-map *floor-map*
+			:wall-map *wall-map*
+			:obstacle-map *obstacle-map*
+			:object-map *object-map*
+			:portals *portals*
+			:messages *messages*))
+
+(add-map (make-instance 'world-map
+			:map-name 'floor-down
+			:tileset *tileset*
+			:map-width *map-width*
+			:map-height *map-height*
+			:floor-map *floor-map*
+			:wall-map *wall-map*
+			:obstacle-map *obstacle-map*
+			:object-map *object-map*
+			:portals *portals*
+			:messages *messages*))
+
+(register-select-function 'ministry 'dungeon-select)
+(register-select-function 'floor-up 'floor-up-select)
+(register-select-function 'floor-down 'floor-down-select)

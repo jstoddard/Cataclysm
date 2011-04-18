@@ -23,15 +23,22 @@
 (defparameter *screen-height* 480)
 (defparameter *data-directory* "/home/jeremiah/src/lisp/cataclysm/")
 
-(defparameter *player-max-hp* 15)
-(defparameter *player-hp* 15)
-(defparameter *player-shells* 100)
-(defparameter *player-dir* 'down)
-(defparameter *player-step* 0)
 (defparameter *game-counter* 0)
-(defparameter *player-keys* 0)
 (defparameter *player-won* nil)
 (defparameter *message* nil)
+
+;;; Characters
+;;; Both the player and the enemy are subclassed off of game-char, which
+;;; tracks the character position, direction, hit points, sprite, and
+;;; current step (which may be used for animating the character in a future
+;;; release). Additionally methods are provided to move the character, and
+;;; to launch a projectile from the character's location.
+
+(defvar *enemies* '()) ; enemy positions, health, etc.
+(defvar *projectiles* '()) ; projectile positions, directions, ttl
+
+(defvar *characters*) ; This contains the character sprites
+(defvar *projectile*) ; This contains the bullet
 
 (declaim (inline get-collision-tiles))
 (defun get-collision-tiles (x y &optional (bbox 13))
@@ -133,22 +140,51 @@ assuming a 26x26 bounding box."
 	(decf (keys *player*))
 	(setf (aref *obstacle-map* (first tile) (second tile)) -1))
       (when (aref *portals* (first tile) (second tile))
-	(load-map (aref *portals* (first tile) (second tile)))
+	(mapcar #'funcall *portal-functions*)
+	(select-map (aref *portals* (first tile) (second tile)))
 	(return-from move t)))))
 
-;;; These contain the details of the player's position and the current
-;;; world map. Each map file will set its own default values at loadtime.
-;;; Tileset should be a 640x480 png file, and tiles will be read in as
-;;; numbers according to their position, e.g., 0 will be the tile starting
-;;; at 0,0; 1 will be the tile at 32,0; 2 will be the tile at 64,0; 20 will
-;;; be the tile at 0,32; and so forth. These numbers will be used by
-;;; *floor-map*, *wall-map*, *obstacle-map*, and *object-map*, which are
-;;; two dimensional arrays of *map-width*, *map-height* size. *portals*
-;;; is also a two dimensional array of the same size, containing strings
-;;; of the map filename to be loaded when a player steps on the
-;;; corresponding tile (usually "" since most tiles aren't portals).
-(defvar *current-map* nil)
-(defvar *world-maps* nil)
+;;; Some graphics that need to be loaded to make characters and projectiles
+;;; drawable.
+(defun load-characters ()
+  "Load 'images/characters.png' into *characters*. We can't do it at startup
+b/c we need lispbuilder-sdl to be started, so we do it in this function which
+is called before the main game loop is run."
+  (setf *characters* (sdl:convert-to-display-format
+		      :surface (sdl:load-image
+				(concatenate 'string *data-directory*
+					     "images/characters.png")
+				:image-type :ping)
+		      :pixel-alpha t)))
+
+(defun load-projectile ()
+  "Load 'images/projectile.png' into *projectile*."
+  (setf *projectile* (sdl:convert-to-display-format
+		      :surface (sdl:load-image
+				(concatenate 'string *data-directory*
+					     "images/projectile.png")
+				:image-type :ping)
+		      :pixel-alpha t)))
+
+;;; The world-map class contains the details of a map. Tileset is a string
+;;; containing a path to a 640x480 png file (to be appended to
+;;; *data-directory*). Tiles will be read in as numbers according to their
+;;; position, from left to right, then top to bottom. These numbers will be
+;;; used by floor-map, wall-map, obstacle-map, and object-map, which are two
+;;; dimensional arrays of map-width by map-height size. portals and messages
+;;; are also arrays of the same size, the former containing a symbol referring
+;;; to the map a player should be transported to if he steps on the
+;;; corresponding tile. The latter will contain strings which will be presented
+;;; to the player upon touching the corresponding tile. *current-map* is an
+;;; instance of world-map containing the map the player is presently playing
+;;; on. *world-maps* is an alist of all the maps in the game. *portal-functions*
+;;; is a list containing names of functions to be called when player steps on a
+;;; portal.
+
+(defparameter *current-map* nil)
+(defparameter *world-maps* nil)
+(defparameter *portal-functions* nil)
+(defparameter *select-functions* nil)
 
 (defclass world-map ()
   ((map-name :initarg :map-name :accessor map-name)
@@ -173,42 +209,41 @@ assuming a 26x26 bounding box."
 	 :pixel-alpha t))
   (acons (map-name world-map) world-map *world-maps*))
 
-(defvar *enemies* '()) ; enemy positions, health, etc.
-(defvar *projectiles* '()) ; projectile positions, directions, ttl
-
-(defvar *tiles*) ; This contains the current tileset as an sdl surface
-(defvar *characters*) ; This contains the character sprites
-(defvar *projectile*) ; This contains the bullet
-
-(defun load-characters ()
-  "Load 'images/characters.png' into *characters*. We can't do it at startup
-b/c we need lispbuilder-sdl to be started, so we do it in this function which
-is called before the main game loop is run."
-  (setf *characters* (sdl:convert-to-display-format
-		      :surface (sdl:load-image
-				(concatenate 'string *data-directory*
-					     "images/characters.png")
-				:image-type :ping)
-		      :pixel-alpha t)))
-
-(defun load-projectile ()
-  "Load 'images/projectile.png' into *projectile*."
-  (setf *projectile* (sdl:convert-to-display-format
-		      :surface (sdl:load-image
-				(concatenate 'string *data-directory*
-					     "images/projectile.png")
-				:image-type :ping)
-		      :pixel-alpha t)))
-
 (defun load-map (map-file)
-  "Load the map given by map-file, and load the png image of the map's tileset
-into *tiles*. Returns sdl surface of the map's tileset."
-  (load (concatenate 'string *data-directory* map-file))
-  (setf *tiles* (sdl:convert-to-display-format
-		 :surface (sdl:load-image
-			   (concatenate 'string *data-directory* *tileset*)
-			   :image-type :png)
-		 :pixel-alpha t)))
+  "Load the map given by map-file."
+  (load (concatenate 'string *data-directory* map-file)))
+
+(defun add-map (map)
+  "Push ((map-name map) . map) onto *world-maps*, creating a new map
+accessible to the game via select-map."
+  (setf *world-maps* (acons (map-name map) map *world-maps*)))
+
+(defun select-map (map-name)
+  "Look up the map with the given name from *world-maps* and set it as the
+current map (i.e. set *current-map* to that map)."
+  (funcall (cdr (assoc map-name *select-functions*)))
+  (setf *current-map* (cdr (assoc map-name *world-maps*))))
+
+(defun register-portal-function (fn)
+  "Add fn to *portal-functions*, indicating that fn should be
+called when player steps on a portal."
+  (push fn *portal-functions*))
+
+(defun remove-portal-function (fn)
+  "Remove fn from *portal-functions*."
+  (setf *portal-functions* (remove fn *portal-functions*)))
+
+(defun register-select-function (map fn)
+  "Add (map . fn) to *select-functions*, indicating that fn should be
+called when map is selected. Since *select-functions* is an alist,
+only the most recently added function for a map will be called, unlike
+with *portal-functions*, where all functions are called each time the
+player steps on a portal."
+  (setf *select-functions* (acons map fn *select-functions*)))
+
+(defun remove-select-function (map fn)
+  "Remove (map . fn) from *select-functions*."
+  (setf *select-functions* (remove `(,map . ,fn) *select-functions*)))
 		 
 (defun draw-tile (tile-set tile-number x y)
   "Draw the tile given by tile-number to the display surface at x, y.
@@ -288,17 +323,21 @@ on the screen."
 			tile-y (floor (+ top-y y) 32))
 		  (when (and (< tile-x (map-width *current-map*))
 			     (< tile-y (map-height *current-map*)))		    
-		    (draw-tile *tiles* (aref (floor-map *current-map*)
-					     tile-x tile-y) x y)
+		    (draw-tile (tiles *current-map*)
+			       (aref (floor-map *current-map*)
+				     tile-x tile-y) x y)
 		    (when (<= 0 (aref (wall-map *current-map*) tile-x tile-y))
-		      (draw-tile *tiles* (aref (wall-map *current-map*)
-					       tile-x tile-y) x y))
+		      (draw-tile (tiles *current-map*)
+				 (aref (wall-map *current-map*)
+				       tile-x tile-y) x y))
 		    (when (<= 0 (aref (obstacle-map *current-map*) tile-x tile-y))
-		      (draw-tile *tiles* (aref (obstacle-map *current-map*)
-					       tile-x tile-y) x y))
+		      (draw-tile (tiles *current-map*)
+				 (aref (obstacle-map *current-map*)
+				       tile-x tile-y) x y))
 		    (when (<= 0 (aref (object-map *current-map*) tile-x tile-y))
-		      (draw-tile *tiles* (aref (object-map *current-map*)
-					       tile-x tile-y) x y))))))
+		      (draw-tile (tiles *current-map*)
+				 (aref (object-map *current-map*)
+				       tile-x tile-y) x y))))))
     (draw-tile *characters* (sprite *player*)
 	       (- (ash *screen-width* -1) 16)
 	       (- (ash *screen-height* -1) 16))))
@@ -381,9 +420,9 @@ finally remove old and collided projectiles."
 		 (< (abs (- (y-position enemy) (y-position *player*))) 16))
 	(decf (hit-points *player*))
 	(cond ((< (x-position enemy) (x-position *player*))
-	       (move *player* 'right) (move *player 'right))
+	       (move *player* 'right) (move *player* 'right))
 	      ((> (x-position enemy) (x-position *player*))
-	       (move *player* 'left) (move *player 'left))
+	       (move *player* 'left) (move *player* 'left))
 	      ((< (y-position enemy) (y-position *player*))
 	       (move *player* 'down) (move *player* 'down))
 	      ((> (y-position enemy) (y-position *player*))
@@ -413,6 +452,7 @@ finally remove old and collided projectiles."
     (load-characters)
     (load-projectile)
     (load-map "overworld.map")
+    (select-map 'overworld)
     (sdl:with-events ()
       (:quit-event () t)
       (:key-down-event (:key key)

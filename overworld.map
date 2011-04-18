@@ -47,23 +47,24 @@
 (defparameter *messages* (make-array '(45 50) :initial-element nil))
 
 ;;; player location
-(cond
-  ((eq *current-dungeon* 'miniplenty)
-   (setf (x-position *player*) 144)
-   (setf (y-position *player*) 176))
-  ((eq *current-dungeon* 'minipax)
-   (setf (x-position *player*) 112)
-   (setf (y-position *player*) 848))
-  ((eq *current-dungeon* 'minitrue)
-   (setf (x-position *player*) 1264)
-   (setf (y-position *player*) 208))
-  ((eq *current-dungeon* 'miniluv)
-   (setf (x-position *player*) 1264)
-   (setf (y-position *player*) 848))
-  (t
-   (setf (x-position *player*) 720)
-   (setf (y-position *player*) 400)))
-(setf *current-dungeon* nil)
+(defun overworld-place-player ()
+  (cond
+    ((eq *current-dungeon* 'miniplenty)
+     (setf (x-position *player*) 144)
+     (setf (y-position *player*) 176))
+    ((eq *current-dungeon* 'minipax)
+     (setf (x-position *player*) 112)
+     (setf (y-position *player*) 848))
+    ((eq *current-dungeon* 'minitrue)
+     (setf (x-position *player*) 1264)
+     (setf (y-position *player*) 208))
+    ((eq *current-dungeon* 'miniluv)
+     (setf (x-position *player*) 1264)
+     (setf (y-position *player*) 848))
+    (t
+     (setf (x-position *player*) 720)
+     (setf (y-position *player*) 400)))
+  (setf *current-dungeon* nil))
 
 ;;; border of trees around overworld
 (dotimes (i 45)
@@ -247,7 +248,7 @@
 (setf (aref *wall-map* 2 4) 32)
 (setf (aref *wall-map* 3 4) 27)
 (setf (aref *floor-map* 4 4) 13)
-(setf (aref *portals* 4 4) "ministry.map")
+(setf (aref *portals* 4 4) 'ministry)
 (setf (aref *wall-map* 5 4) 27)
 (setf (aref *wall-map* 6 4) 31)
 (setf (aref *obstacle-map* 5 5) 61)
@@ -261,7 +262,7 @@
 (setf (aref *wall-map* 1 25) 32)
 (setf (aref *wall-map* 2 25) 27)
 (setf (aref *floor-map* 3 25) 13)
-(setf (aref *portals* 3 25) "ministry.map")
+(setf (aref *portals* 3 25) 'ministry)
 (setf (aref *wall-map* 4 25) 27)
 (setf (aref *wall-map* 5 25) 31)
 (setf (aref *obstacle-map* 4 26) 61)
@@ -275,7 +276,7 @@
 (setf (aref *wall-map* 37 5) 32)
 (setf (aref *wall-map* 38 5) 27)
 (setf (aref *floor-map* 39 5) 13)
-(setf (aref *portals* 39 5) "ministry.map")
+(setf (aref *portals* 39 5) 'ministry)
 (setf (aref *wall-map* 40 5) 27)
 (setf (aref *wall-map* 41 5) 31)
 (setf (aref *obstacle-map* 40 6) 61)
@@ -289,22 +290,24 @@
 (setf (aref *wall-map* 37 25) 32)
 (setf (aref *wall-map* 38 25) 27)
 (setf (aref *floor-map* 39 25) 13)
-(setf (aref *portals* 39 25) "ministry.map")
+(setf (aref *portals* 39 25) 'ministry)
 (setf (aref *wall-map* 40 25) 27)
 (setf (aref *wall-map* 41 25) 31)
 (setf (aref *obstacle-map* 38 26) 61)
 (setf (aref *messages* 38 26) "Ministry of Love")
 
-;;; place a bunch of enemies around the map
+(add-map (make-instance 'world-map
+			:map-name 'overworld
+			:tileset *tileset*
+			:map-width *map-width*
+			:map-height *map-height*
+			:floor-map *floor-map*
+			:wall-map *wall-map*
+			:obstacle-map *obstacle-map*
+			:object-map *object-map*
+			:portals *portals*
+			:messages *messages*))
 
-(setf *current-map* (make-instance 'world-map
-				   :map-name 'overworld
-				   :tileset *tileset*
-				   :map-width *map-width*
-				   :map-height *map-height*
-				   :floor-map *floor-map*
-				   :wall-map *wall-map*
-				   :obstacle-map *obstacle-map*
-				   :object-map *object-map*
-				   :portals *portals*
-				   :messages *messages*))
+(register-select-function 'overworld 'overworld-place-player)
+
+(load-map "ministry.map")
